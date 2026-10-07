@@ -60,8 +60,26 @@ export function useResource({ resource, auto = true }: Options) {
   }, [resource]);
 
   useEffect(() => {
-    if (auto) void reload();
-  }, [auto, reload]);
+    if (!auto) return;
+    let active = true;
+    void jsonFetch(`/api/data/${resource}`)
+      .then((body) => {
+        if (!active) return;
+        setRows((body?.data ?? []) as Row[]);
+        setError(null);
+      })
+      .catch((err) => {
+        if (!active) return;
+        setError(err instanceof Error ? err.message : "Gagal memuat data");
+      })
+      .finally(() => {
+        if (!active) return;
+        setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [auto, resource]);
 
   const create = useCallback(
     async (values: Row) => {

@@ -5,9 +5,11 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useId,
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
   type ButtonHTMLAttributes,
   type ReactNode,
 } from "react";
@@ -287,8 +289,12 @@ export function Modal({
   footer?: ReactNode;
   size?: "sm" | "md" | "lg";
 }) {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  // useSyncExternalStore: false saat SSR & hydration pertama, true di client.
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
@@ -430,6 +436,16 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 /* Chart primitives (hand-rolled SVG)                                 */
 /* ------------------------------------------------------------------ */
 
+function cumulativeOffsets(values: number[]): number[] {
+  const out: number[] = [];
+  let acc = 0;
+  for (const v of values) {
+    out.push(acc);
+    acc += v;
+  }
+  return out;
+}
+
 export function BarRow({
   label,
   value,
@@ -469,7 +485,7 @@ export function Donut({
   const total = slices.reduce((a, s) => a + s.value, 0) || 1;
   const r = (size - thickness) / 2;
   const c = 2 * Math.PI * r;
-  let offset = 0;
+  const offsets = cumulativeOffsets(slices.map((s) => (s.value / total) * c));
   return (
     <div className="relative" style={{ width: size, height: size }}>
       <svg width={size} height={size} className="-rotate-90">
@@ -481,7 +497,7 @@ export function Donut({
           stroke="#eceae3"
           strokeWidth={thickness}
         />
-        {slices.map((s) => {
+        {slices.map((s, idx) => {
           const len = (s.value / total) * c;
           const el = (
             <circle
@@ -493,12 +509,11 @@ export function Donut({
               stroke={s.color}
               strokeWidth={thickness}
               strokeDasharray={`${Math.max(len - 1.5, 0)} ${c - Math.max(len - 1.5, 0)}`}
-              strokeDashoffset={-offset}
+              strokeDashoffset={-offsets[idx]}
               strokeLinecap="round"
               style={{ transition: "stroke-dasharray 700ms cubic-bezier(.16,1,.3,1)" }}
             />
           );
-          offset += len;
           return el;
         })}
       </svg>
@@ -530,7 +545,8 @@ export function Sparkline({
   });
   const line = coords.map(([x, y], i) => `${i === 0 ? "M" : "L"}${x.toFixed(2)},${y.toFixed(2)}`).join(" ");
   const area = `${line} L${w},100 L0,100 Z`;
-  const id = useRef(`spark-${Math.random().toString(36).slice(2, 8)}`).current;
+  const gradientId = useId();
+  const id = `spark-${gradientId}`;
   return (
     <div>
       <svg viewBox={`0 0 ${w} 100`} preserveAspectRatio="none" style={{ height, width: "100%" }}>

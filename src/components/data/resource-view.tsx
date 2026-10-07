@@ -2,6 +2,7 @@
 
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
@@ -171,22 +172,23 @@ export function ResourceView({
     };
   }, []);
 
-  const relations = config.relations ?? [];
-
-  const loadRelations = useMemo(
-    () => async () => {
-      if (relations.length === 0) return;
-      const entries = await Promise.all(
-        relations.map(async (r) => [r, await fetchResource(r)] as const),
-      );
-      setData(Object.fromEntries(entries));
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [relations.join(",")],
-  );
+  const loadRelations = useCallback(async () => {
+    const list = config.relations ?? [];
+    if (list.length === 0) return {};
+    const entries = await Promise.all(
+      list.map(async (r) => [r, await fetchResource(r)] as const),
+    );
+    return Object.fromEntries(entries);
+  }, [config.relations]);
 
   useEffect(() => {
-    void loadRelations();
+    let active = true;
+    void loadRelations().then((next) => {
+      if (active && Object.keys(next).length > 0) setData(next);
+    });
+    return () => {
+      active = false;
+    };
   }, [loadRelations]);
 
   const ctx: Ctx = useMemo(() => {

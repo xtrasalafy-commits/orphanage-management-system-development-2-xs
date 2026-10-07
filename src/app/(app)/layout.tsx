@@ -8,6 +8,13 @@ import { AppProviders } from "@/components/app-providers";
 
 export const dynamic = "force-dynamic";
 
+function hitungDokumenPerhatian(rows: { status: string; berlakuSampai: string | null }[]) {
+  const soon = Date.now() + 90 * 86400000;
+  return rows.filter(
+    (d) => d.status !== "valid" || (d.berlakuSampai && new Date(`${d.berlakuSampai}T00:00:00`).getTime() <= soon),
+  ).length;
+}
+
 export default async function AppLayout({ children: page }: { children: React.ReactNode }) {
   const user = await getSessionUser();
   if (!user) redirect("/login");
@@ -34,10 +41,7 @@ export default async function AppLayout({ children: page }: { children: React.Re
     .select({ status: documents.status, berlakuSampai: documents.berlakuSampai })
     .from(documents)
     .catch(() => []);
-  const soon = Date.now() + 90 * 86400000;
-  const dokumenPerhatian = docRows.filter(
-    (d) => d.status !== "valid" || (d.berlakuSampai && new Date(`${d.berlakuSampai}T00:00:00`).getTime() <= soon),
-  ).length;
+  const dokumenPerhatian = hitungDokumenPerhatian(docRows);
 
   const occupancy = new Map<number, number>();
   for (const row of housedKids) {

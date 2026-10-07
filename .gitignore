@@ -1,0 +1,19 @@
+node_modules/
+dist/
+.next/
+out/
+build/
+coverage/
+
+# environment variables (jangan commit kredensial)
+.env
+.env.*
+!.env.example
+
+# build artifacts & logs
+*.log
+next-env.d.ts
+tsconfig.tsbuildinfo
+
+# tooling state
+.kilo/

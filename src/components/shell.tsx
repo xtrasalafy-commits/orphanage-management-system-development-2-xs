@@ -48,12 +48,30 @@ export function Shell({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  // Reset state menu mobile setiap pergantian rute lewat remount (tanpa effect).
+  return (
+    <ShellInner key={pathname} pathname={pathname} user={user} alerts={alerts}>
+      {children}
+    </ShellInner>
+  );
+}
+
+function ShellInner({
+  pathname,
+  user,
+  alerts,
+  children,
+}: {
+  pathname: string;
+  user: SessionUser;
+  alerts: ShellAlerts;
+  children: React.ReactNode;
+}) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [menu, setMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => setOpen(false), [pathname]);
   useEffect(() => {
     const onClick = (e: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenu(false);
