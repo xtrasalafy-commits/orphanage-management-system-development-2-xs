@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import "@fontsource-variable/plus-jakarta-sans";
 import "@fontsource-variable/bricolage-grotesque";
 import "./globals.css";
+import { TrakteerWidget } from "@/components/trakteer-widget";
 
 export const metadata: Metadata = {
   title: "Sistem Manajemen Panti Asuhan — Harapan Bangsa",
@@ -17,7 +18,10 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="id">
-      <body className="bg-paper text-ink-900 antialiased">{children}</body>
+      <body className="bg-paper text-ink-900 antialiased">
+        {children}
+        <TrakteerWidget />
+      </body>
     </html>
   );
 }

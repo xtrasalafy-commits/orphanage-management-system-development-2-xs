@@ -15,5 +15,8 @@ coverage/
 next-env.d.ts
 tsconfig.tsbuildinfo
 
+# arsip source code (di-generate oleh `npm run pack` / prebuild)
+public/source-code.zip
+
 # tooling state
 .kilo/
